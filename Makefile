@@ -7,7 +7,7 @@ libtest1.so:libtest1.c
 libtest2.so:libtest2.c
 	gcc -g -o $@ -shared -fPIC $^
 
-libstub.so:stub.c utils/list.c utils/list_node.c utils/list_iterator.c utils/x86_64_InstructionSize.c
+libstub.so:stub.c utils/list.c utils/list_node.c utils/list_iterator.c utils/x86_64_InstructionSize.c utils/elf_header.c utils/section.c utils/err_msg.c
 	gcc -g -o $@ -shared -fPIC $^ 
 
 clean:

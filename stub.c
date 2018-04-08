@@ -5,10 +5,12 @@
 #include <unistd.h>
 #include <errno.h>
 #include <dlfcn.h>
+#include <fcntl.h>
 #include <sys/cdefs.h>
 #include <sys/mman.h>
 #include "utils/list.h"
 #include "utils/InstructionSize.h"
+#include "utils/defs.h"
 
 #define DIRECT_JUMP 0xe9
 #define UNDIRECT_JUMP 0x25ff
@@ -33,6 +35,9 @@ typedef struct _stub_info_t
 static list_t *stub_info_list = NULL;
 static size_t pagesize = 0;
 
+Elf_Ehdr elf_header;
+int addr_bits;
+unsigned char elf_class;
 
 static int stub_info_match(void *func, stub_info_t *info)
 {
@@ -349,3 +354,44 @@ int uninstall_stub(void* func)
     list_remove(stub_info_list, stub_info_node);
 	return 0;
 }
+
+void print_symbol_table(char* elf_name) {
+    int fd = 0;
+	if ((fd = open(elf_name, O_RDONLY)) == -1) {
+        fprintf(stderr, "Cannot open %s\n", elf_name);
+		return;
+    }
+	read_elf_header(fd);
+	elf_class = elf_header.e_ident[EI_CLASS];
+	if(elf_header.e_ident[EI_CLASS] == ELFCLASS32) {
+		addr_bits = 32;
+	} else {
+	    addr_bits = 64;
+	}
+	display_symbol_table(fd);
+    close(fd);
+	clean_section_env();
+	memset((void*)&elf_header, 0, sizeof(elf_header));
+}
+
+void* get_static_symbol_address(char* sym_name, char* elf_name) {
+    int fd = 0;
+	void* addr = NULL;
+	if ((fd = open(elf_name, O_RDONLY)) == -1) {
+        fprintf(stderr, "Cannot open %s\n", elf_name);
+		return;
+    }
+	read_elf_header(fd);
+	elf_class = elf_header.e_ident[EI_CLASS];
+	if(elf_header.e_ident[EI_CLASS] == ELFCLASS32) {
+		addr_bits = 32;
+	} else {
+	    addr_bits = 64;
+	}
+    addr = get_symbol_by_name(fd, sym_name);
+	close(fd);
+	clean_section_env();
+	memset((void*)&elf_header, 0, sizeof(elf_header));
+	return addr;
+}
+

@@ -12,11 +12,12 @@ int main()
 	libtest1();
 	//===============================
 
+    print_symbol_table("./test");
+    printf("%p\n", get_static_symbol_address("main", "./test"));
     void* handler1 = dlopen("./libtest1.so", RTLD_NOW);
 	void* handler2 = dlopen("./libtest2.so", RTLD_NOW);
 	void* func1 = dlsym(handler1, "libtest1");
 	void* func2 = dlsym(handler2, "libtest2");
-	
     func_type new_func = (func_type)install_stub(func1, func2);
     //===============================
 	if(new_func == NULL) {
